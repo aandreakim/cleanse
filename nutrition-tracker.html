@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nutrition Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #f8f5f0;
+      --surface:    #fffcf8;
+      --border:     #e8e2d9;
+      --border-mid: #d4ccc0;
+      --sage:       #6b8a6e;
+      --sage-pale:  #dde8db;
+      --rose:       #b8767c;
+      --rose-pale:  #eedcdb;
+      --ink:        #2c2520;
+      --ink-mid:    #6b5f55;
+      --ink-light:  #9e9288;
+      --gold:       #a08860;
+    }
+
+    body {
+      font-family: 'Jost', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      max-width: 440px;
+      margin: 0 auto;
+      padding: 0 0 60px;
+    }
+
+    /* ── Header ─────────────────────────── */
+    .header {
+      background: #c8d9c4;
+      color: #2c3a2e;
+      padding: 36px 28px 28px;
+    }
+
+    .header-eyebrow {
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #6b8a6e;
+      margin-bottom: 8px;
+      font-weight: 400;
+    }
+
+    .header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.4rem;
+      font-weight: 300;
+      line-height: 1;
+    }
+
+    .header h1 em { font-style: italic; color: #4a6b4e; }
+
+    .header-date {
+      font-size: 0.7rem;
+      color: #6b8a6e;
+      margin-top: 8px;
+      letter-spacing: 0.06em;
+      font-weight: 300;
+    }
+
+    /* ── Tabs ───────────────────────────── */
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      padding: 14px;
+      text-align: center;
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 500;
+      color: var(--ink-light);
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-family: 'Jost', sans-serif;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .tab.active {
+      color: var(--ink);
+      border-bottom-color: var(--sage);
+    }
+
+    /* ── Tab panels ─────────────────────── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── Stats row ───────────────────────── */
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat { padding: 24px; text-align: center; }
+
+    .stat-divider { background: var(--border); margin: 18px 0; }
+
+    .stat-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.8rem;
+      font-weight: 300;
+      line-height: 1;
+    }
+
+    .stat-value.rose { color: var(--rose); }
+    .stat-value.sage { color: var(--sage); }
+
+    .stat-unit {
+      font-size: 0.62rem;
+      color: var(--ink-light);
+      margin-top: 4px;
+      letter-spacing: 0.08em;
+      font-weight: 300;
+    }
+
+    /* ── Sections ────────────────────────── */
+    .section {
+      padding: 22px 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .section + .section { margin-top: 8px; }
+
+    .section-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      font-weight: 500;
+      margin-bottom: 18px;
+    }
+
+    /* ── Progress ────────────────────────── */
+    .progress-row { margin-bottom: 16px; }
+    .progress-row:last-of-type { margin-bottom: 0; }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 7px;
+    }
+
+    .progress-name { font-size: 0.8rem; font-weight: 400; color: var(--ink-mid); }
+
+    .progress-count {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.9rem;
+      color: var(--ink-light);
+    }
+
+    .progress-track { height: 2px; background: var(--border); overflow: hidden; }
+
+    .progress-fill {
+      height: 100%;
+      transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+      max-width: 100%;
+    }
+
+    .progress-fill.cal  { background: var(--rose); }
+    .progress-fill.prot { background: var(--sage); }
+
+    .goal-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .goal-field label {
+      display: block;
+      font-size: 0.58rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .goal-field input {
+      width: 100%;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      background: transparent;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.9rem;
+      color: var(--ink);
+      font-weight: 300;
+      outline: none;
+      padding: 6px 0;
+      transition: border-color 0.2s;
+    }
+
+    .goal-field input:focus { border-color: var(--sage); }
+
+    /* ── Form ────────────────────────────── */
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; }
+
+    .field { padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .field.full { grid-column: 1 / -1; }
+    .field.half-right { border-left: 1px solid var(--border); padding-left: 16px; }
+
+    .field label {
+      display: block;
+      font-size: 0.58rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .field input, .field select {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.9rem;
+      color: var(--ink);
+      font-weight: 300;
+      outline: none;
+      padding: 0;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .field input::placeholder { color: var(--border-mid); }
+
+    .add-btn {
+      display: block;
+      width: 100%;
+      margin-top: 22px;
+      padding: 14px;
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--ink);
+      font-family: 'Jost', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .add-btn:hover { background: var(--ink); color: var(--bg); }
+
+    /* ── Meal log ────────────────────────── */
+    .log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 28px 0;
+    }
+
+    .log-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      font-weight: 500;
+    }
+
+    .clear-btn {
+      font-family: 'Jost', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .clear-btn:hover { color: var(--rose); }
+
+    .meal-list { padding: 0 28px; }
+
+    .group-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 500;
+      padding: 16px 0 8px;
+    }
+
+    .meal-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      animation: fadeUp 0.2s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .meal-row-info { flex: 1; min-width: 0; }
+
+    .meal-row-name {
+      font-size: 0.88rem;
+      font-weight: 400;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .meal-row-macros { display: flex; gap: 10px; margin-top: 3px; }
+
+    .m-cal  { font-size: 0.72rem; color: var(--rose); font-weight: 400; }
+    .m-prot { font-size: 0.72rem; color: var(--sage); font-weight: 400; }
+    .m-sep  { font-size: 0.72rem; color: var(--border-mid); }
+
+    .del-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--border-mid);
+      font-size: 0.75rem;
+      padding: 4px;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+
+    .del-btn:hover { color: var(--rose); }
+
+    .empty { padding: 40px 28px; text-align: center; }
+
+    .empty-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      font-style: italic;
+      color: var(--ink-light);
+      font-weight: 300;
+      line-height: 1.6;
+    }
+
+    /* ── History / Calendar ──────────────── */
+    .cal-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 28px 18px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cal-nav-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--ink-mid);
+      font-size: 1rem;
+      padding: 4px 8px;
+      font-family: 'Jost', sans-serif;
+      transition: color 0.15s;
+    }
+
+    .cal-nav-btn:hover { color: var(--ink); }
+
+    .cal-month {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-weight: 400;
+      color: var(--ink);
+    }
+
+    .cal-grid-wrap {
+      background: var(--surface);
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cal-dow {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 6px;
+    }
+
+    .cal-dow span {
+      text-align: center;
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      font-weight: 500;
+      padding: 6px 0;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .cal-cell {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+      gap: 3px;
+    }
+
+    .cal-cell:hover:not(.empty-cell) { background: var(--bg); }
+    .cal-cell.empty-cell { cursor: default; }
+    .cal-cell.today-cell { background: var(--sage-pale); }
+    .cal-cell.selected-cell { background: var(--sage-pale); outline: 1.5px solid var(--sage); }
+
+    .cal-day-num {
+      font-size: 0.78rem;
+      font-weight: 400;
+      color: var(--ink-mid);
+      line-height: 1;
+    }
+
+    .cal-cell.today-cell .cal-day-num { color: var(--sage); font-weight: 500; }
+    .cal-cell.future-cell .cal-day-num { color: var(--border-mid); }
+
+    .cal-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+    }
+
+    .dot-met    { background: var(--sage); }
+    .dot-partial { background: var(--rose); }
+    .dot-logged { background: var(--border-mid); }
+
+    /* ── Day detail panel ────────────────── */
+    .day-detail {
+      padding: 20px 28px;
+      background: var(--bg);
+      animation: fadeUp 0.2s ease;
+    }
+
+    .day-detail-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .day-detail-date {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      font-weight: 400;
+      color: var(--ink);
+    }
+
+    .day-detail-totals {
+      display: flex;
+      gap: 14px;
+    }
+
+    .day-detail-totals span {
+      font-size: 0.75rem;
+      color: var(--ink-light);
+    }
+
+    .day-detail-totals .dt-cal  { color: var(--rose); font-weight: 500; }
+    .day-detail-totals .dt-prot { color: var(--sage); font-weight: 500; }
+
+    .day-meal-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .day-meal-row:last-child { border-bottom: none; }
+
+    .day-meal-name { font-size: 0.84rem; color: var(--ink); }
+    .day-meal-type { font-size: 0.68rem; color: var(--ink-light); text-transform: capitalize; margin-top: 2px; }
+
+    .day-meal-macros { display: flex; gap: 10px; }
+    .day-meal-macros .m-cal  { font-size: 0.72rem; color: var(--rose); }
+    .day-meal-macros .m-prot { font-size: 0.72rem; color: var(--sage); }
+
+    .day-empty {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.95rem;
+      font-style: italic;
+      color: var(--ink-light);
+      padding: 8px 0;
+    }
+
+    /* ── Legend ──────────────────────────── */
+    .cal-legend {
+      display: flex;
+      gap: 16px;
+      padding: 12px 28px;
+      background: var(--bg);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.62rem;
+      color: var(--ink-light);
+      letter-spacing: 0.06em;
+    }
+
+    .legend-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-eyebrow">Wellness Journal</div>
+  <h1>Daily <em>Nutrition</em></h1>
+  <div class="header-date" id="today-date"></div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('today')">Today</button>
+  <button class="tab" onclick="switchTab('history')">History</button>
+</div>
+
+<!-- ── TODAY PANEL ── -->
+<div class="panel active" id="panel-today">
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Calories Left</div>
+      <div class="stat-value rose" id="total-cal">1500</div>
+      <div class="stat-unit">kcal remaining</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <div class="stat-label">Protein Left</div>
+      <div class="stat-value sage" id="total-prot">130</div>
+      <div class="stat-unit">grams remaining</div>
+    </div>
+  </div>
+
+  <div style="height:8px"></div>
+
+  <div class="section">
+    <div class="section-label">Progress to goal</div>
+    <div class="progress-row">
+      <div class="progress-meta">
+        <span class="progress-name">Calories</span>
+        <span class="progress-count" id="cal-progress-label">0 / 1500 kcal</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill cal" id="cal-bar" style="width:0%"></div></div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-meta">
+        <span class="progress-name">Protein</span>
+        <span class="progress-count" id="prot-progress-label">0 / 130 g</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill prot" id="prot-bar" style="width:0%"></div></div>
+    </div>
+    <div class="goal-row">
+      <div class="goal-field">
+        <label>Calorie goal</label>
+        <input type="number" id="goal-cal" value="1500" min="1" />
+      </div>
+      <div class="goal-field">
+        <label>Protein goal (g)</label>
+        <input type="number" id="goal-prot" value="130" min="1" />
+      </div>
+    </div>
+  </div>
+
+  <div style="height:8px"></div>
+
+  <div class="section">
+    <div class="section-label">Log a meal</div>
+    <div class="field-grid">
+      <div class="field full">
+        <label>Meal name</label>
+        <input type="text" id="meal-name" placeholder="e.g. Salmon + roasted vegetables" autocomplete="off" />
+        <div id="estimate-hint" style="font-size:0.68rem;color:var(--sage);margin-top:6px;min-height:14px;letter-spacing:0.02em;line-height:1.5;"></div>
+      </div>
+      <div class="field">
+        <label>Calories (kcal)</label>
+        <input type="number" id="meal-cal" placeholder="0" min="0" />
+      </div>
+      <div class="field half-right">
+        <label>Protein (g)</label>
+        <input type="number" id="meal-prot" placeholder="0" min="0" />
+      </div>
+      <div class="field full">
+        <label>Meal type</label>
+        <select id="meal-type">
+          <option value="breakfast">Breakfast</option>
+          <option value="lunch">Lunch</option>
+          <option value="dinner">Dinner</option>
+          <option value="snack">Snack</option>
+        </select>
+      </div>
+    </div>
+    <button class="add-btn" onclick="addMeal()">Add to journal</button>
+  </div>
+
+  <div style="height:8px"></div>
+
+  <div class="log-header">
+    <span class="log-label">Today's log</span>
+    <button class="clear-btn" onclick="resetDay()">Clear day</button>
+  </div>
+  <div class="meal-list" id="meal-list"></div>
+
+</div><!-- /panel-today -->
+
+<!-- ── HISTORY PANEL ── -->
+<div class="panel" id="panel-history">
+
+  <div class="cal-nav">
+    <button class="cal-nav-btn" onclick="changeMonth(-1)">&#8592;</button>
+    <span class="cal-month" id="cal-month-label"></span>
+    <button class="cal-nav-btn" onclick="changeMonth(1)">&#8594;</button>
+  </div>
+
+  <div class="cal-grid-wrap">
+    <div class="cal-dow">
+      <span>Su</span><span>Mo</span><span>Tu</span><span>We</span>
+      <span>Th</span><span>Fr</span><span>Sa</span>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+
+  <div class="cal-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--sage)"></div>Goals met</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--rose)"></div>Partial</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--border-mid)"></div>Logged</div>
+  </div>
+
+  <div id="day-detail"></div>
+
+</div><!-- /panel-history -->
+
+<script>
+  // ── Storage (permanent key — never change) ──────────────────────────
+  const STORAGE_KEY = 'cleanse_nutrition';
+  const GOALS_KEY   = 'cleanse_goals';
+  const ORDER = ['breakfast','lunch','dinner','snack'];
+
+  function todayKey() { return new Date().toISOString().slice(0,10); }
+
+  // Goals stored separately so they survive day rollovers
+  function loadGoals() {
+    try {
+      const raw = localStorage.getItem(GOALS_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return { cal: 1500, prot: 130 };
+  }
+
+  function saveGoals(g) { localStorage.setItem(GOALS_KEY, JSON.stringify(g)); }
+
+  // All days stored as { "YYYY-MM-DD": [meals...], ... }
+  function loadAllDays() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return {};
+      const d = JSON.parse(raw);
+      // Migrate old single-day format
+      if (d.date && d.meals) {
+        const migrated = {};
+        migrated[d.date] = d.meals || [];
+        return migrated;
+      }
+      // Already new format
+      if (typeof d === 'object' && !Array.isArray(d)) return d;
+      return {};
+    } catch { return {}; }
+  }
+
+  function saveAllDays(days) { localStorage.setItem(STORAGE_KEY, JSON.stringify(days)); }
+
+  let goals   = loadGoals();
+  let allDays = loadAllDays();
+  let calYear, calMonth, selectedDay = null;
+
+  function todayMeals() { return allDays[todayKey()] || []; }
+
+  // ── Today tab ──────────────────────────────────────────────────────
+  function render() {
+    const meals     = todayMeals();
+    const totalCal  = meals.reduce((s,m) => s + m.cal,  0);
+    const totalProt = meals.reduce((s,m) => s + m.prot, 0);
+    const gc = goals.cal, gp = goals.prot;
+
+    document.getElementById('total-cal').textContent  = Math.max(0, gc - totalCal);
+    document.getElementById('total-prot').textContent = Math.max(0, gp - totalProt);
+    document.getElementById('cal-progress-label').textContent  = `${totalCal} / ${gc} kcal`;
+    document.getElementById('prot-progress-label').textContent = `${totalProt} / ${gp} g`;
+    document.getElementById('cal-bar').style.width  = Math.min(100,(totalCal/gc)*100)+'%';
+    document.getElementById('prot-bar').style.width = Math.min(100,(totalProt/gp)*100)+'%';
+    document.getElementById('goal-cal').value  = gc;
+    document.getElementById('goal-prot').value = gp;
+
+    const list = document.getElementById('meal-list');
+
+    if (!meals.length) {
+      list.innerHTML = `<div class="empty"><p class="empty-text">Nothing logged yet.<br>Nourish yourself well today.</p></div>`;
+      return;
+    }
+
+    const groups = {};
+    meals.forEach((m,i) => {
+      if (!groups[m.type]) groups[m.type] = [];
+      groups[m.type].push({ ...m, index: i });
+    });
+
+    let html = '';
+    ORDER.forEach(type => {
+      if (!groups[type]) return;
+      html += `<div class="group-label">${cap(type)}</div>`;
+      groups[type].forEach(m => {
+        html += `
+          <div class="meal-row">
+            <div class="meal-row-info">
+              <div class="meal-row-name">${esc(m.name)}</div>
+              <div class="meal-row-macros">
+                <span class="m-cal">${m.cal} kcal</span>
+                <span class="m-sep">·</span>
+                <span class="m-prot">${m.prot}g protein</span>
+              </div>
+            </div>
+            <button class="del-btn" onclick="deleteMeal(${m.index})">✕</button>
+          </div>`;
+      });
+    });
+
+    list.innerHTML = html;
+  }
+
+  function addMeal() {
+    const name = document.getElementById('meal-name').value.trim();
+    const cal  = parseInt(document.getElementById('meal-cal').value)  || 0;
+    const prot = parseInt(document.getElementById('meal-prot').value) || 0;
+    const type = document.getElementById('meal-type').value;
+    if (!name) { document.getElementById('meal-name').focus(); return; }
+    const key = todayKey();
+    if (!allDays[key]) allDays[key] = [];
+    allDays[key].push({ name, cal, prot, type });
+    saveAllDays(allDays);
+    render();
+    document.getElementById('meal-name').value = '';
+    document.getElementById('meal-cal').value  = '';
+    document.getElementById('meal-prot').value = '';
+    document.getElementById('estimate-hint').textContent = '';
+    lastEstimate = { cal: null, prot: null };
+    document.getElementById('meal-name').focus();
+  }
+
+  function deleteMeal(i) {
+    const key = todayKey();
+    allDays[key].splice(i, 1);
+    saveAllDays(allDays);
+    render();
+  }
+
+  function resetDay() {
+    if (!confirm('Clear all meals for today?')) return;
+    allDays[todayKey()] = [];
+    saveAllDays(allDays);
+    render();
+  }
+
+  document.getElementById('goal-cal').addEventListener('change', e => {
+    goals.cal = parseInt(e.target.value) || 1500;
+    saveGoals(goals); render();
+  });
+  document.getElementById('goal-prot').addEventListener('change', e => {
+    goals.prot = parseInt(e.target.value) || 130;
+    saveGoals(goals); render();
+  });
+
+  ['meal-name','meal-cal','meal-prot'].forEach(id =>
+    document.getElementById(id).addEventListener('keydown', e => { if (e.key==='Enter') addMeal(); })
+  );
+
+  document.getElementById('meal-name').addEventListener('input', scheduleEstimate);
+
+  // ── Calendar tab ───────────────────────────────────────────────────
+  function renderCalendar() {
+    const now    = new Date();
+    const year   = calYear;
+    const month  = calMonth;
+    const today  = todayKey();
+
+    document.getElementById('cal-month-label').textContent =
+      new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    let html = '';
+
+    // Empty leading cells
+    for (let i = 0; i < firstDay; i++) {
+      html += `<div class="cal-cell empty-cell"></div>`;
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr  = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isToday  = dateStr === today;
+      const isFuture = dateStr > today;
+      const isSelected = dateStr === selectedDay;
+      const meals    = allDays[dateStr] || [];
+      const hasData  = meals.length > 0;
+
+      let dotHtml = '';
+      if (hasData) {
+        const tc = meals.reduce((s,m) => s+m.cal,  0);
+        const tp = meals.reduce((s,m) => s+m.prot, 0);
+        const metCal  = tc >= goals.cal  * 0.9;
+        const metProt = tp >= goals.prot * 0.9;
+        const dotClass = (metCal && metProt) ? 'dot-met' : (metCal || metProt) ? 'dot-partial' : 'dot-logged';
+        dotHtml = `<div class="cal-dot ${dotClass}"></div>`;
+      }
+
+      const classes = [
+        'cal-cell',
+        isToday    ? 'today-cell'   : '',
+        isFuture   ? 'future-cell'  : '',
+        isSelected ? 'selected-cell': '',
+      ].filter(Boolean).join(' ');
+
+      const clickable = !isFuture ? `onclick="selectDay('${dateStr}')"` : '';
+
+      html += `
+        <div class="${classes}" ${clickable}>
+          <span class="cal-day-num">${d}</span>
+          ${dotHtml}
+        </div>`;
+    }
+
+    document.getElementById('cal-grid').innerHTML = html;
+    renderDayDetail();
+  }
+
+  function selectDay(dateStr) {
+    selectedDay = selectedDay === dateStr ? null : dateStr;
+    renderCalendar();
+  }
+
+  function renderDayDetail() {
+    const el = document.getElementById('day-detail');
+    if (!selectedDay) { el.innerHTML = ''; return; }
+
+    const meals = allDays[selectedDay] || [];
+    const tc = meals.reduce((s,m) => s+m.cal,  0);
+    const tp = meals.reduce((s,m) => s+m.prot, 0);
+
+    const label = new Date(selectedDay + 'T12:00:00').toLocaleDateString('en-US', {
+      weekday: 'long', month: 'long', day: 'numeric'
+    });
+
+    let mealsHtml = meals.length
+      ? meals.map(m => `
+          <div class="day-meal-row">
+            <div>
+              <div class="day-meal-name">${esc(m.name)}</div>
+              <div class="day-meal-type">${m.type}</div>
+            </div>
+            <div class="day-meal-macros">
+              <span class="m-cal">${m.cal} kcal</span>
+              <span class="m-prot">${m.prot}g</span>
+            </div>
+          </div>`).join('')
+      : `<p class="day-empty">No meals logged this day.</p>`;
+
+    el.innerHTML = `
+      <div class="day-detail">
+        <div class="day-detail-header">
+          <span class="day-detail-date">${label}</span>
+          <div class="day-detail-totals">
+            <span class="dt-cal">${tc} kcal</span>
+            <span class="dt-prot">${tp}g protein</span>
+          </div>
+        </div>
+        ${mealsHtml}
+      </div>`;
+  }
+
+  function changeMonth(dir) {
+    calMonth += dir;
+    if (calMonth > 11) { calMonth = 0;  calYear++; }
+    if (calMonth < 0)  { calMonth = 11; calYear--; }
+    renderCalendar();
+  }
+
+  // ── Tabs ───────────────────────────────────────────────────────────
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t,i) =>
+      t.classList.toggle('active', (i === 0) === (tab === 'today'))
+    );
+    document.getElementById('panel-today').classList.toggle('active',   tab === 'today');
+    document.getElementById('panel-history').classList.toggle('active', tab === 'history');
+    if (tab === 'history') renderCalendar();
+  }
+
+  // ── Food database & estimation ─────────────────────────────────────
+  // Each entry: { tags: [...keywords], cal, prot, label }
+  // Values are typical single-serving estimates
+  const FOOD_DB = [
+    // Breakfast
+    { tags:['oatmeal','oats','porridge'],                        cal:310,  prot:10,  label:'Oatmeal' },
+    { tags:['eggs','egg','scrambled eggs','fried egg'],          cal:140,  prot:12,  label:'Eggs' },
+    { tags:['egg whites','egg white'],                           cal:70,   prot:14,  label:'Egg whites' },
+    { tags:['greek yogurt','yogurt','skyr'],                     cal:130,  prot:17,  label:'Greek yogurt' },
+    { tags:['smoothie','protein smoothie'],                      cal:320,  prot:22,  label:'Smoothie' },
+    { tags:['protein shake','whey shake','protein powder'],      cal:200,  prot:30,  label:'Protein shake' },
+    { tags:['avocado toast','avo toast'],                        cal:360,  prot:10,  label:'Avocado toast' },
+    { tags:['pancakes','pancake'],                               cal:370,  prot:9,   label:'Pancakes' },
+    { tags:['waffles','waffle'],                                 cal:410,  prot:9,   label:'Waffles' },
+    { tags:['granola','granola bowl'],                           cal:400,  prot:10,  label:'Granola' },
+    { tags:['cereal','cereal with milk'],                        cal:290,  prot:9,   label:'Cereal with milk' },
+    { tags:['bagel','bagel with cream cheese'],                  cal:350,  prot:11,  label:'Bagel' },
+    { tags:['toast','toast with butter'],                        cal:180,  prot:6,   label:'Toast' },
+    { tags:['acai bowl','acai'],                                 cal:420,  prot:8,   label:'Açaí bowl' },
+    { tags:['chia pudding','chia seed pudding','chia'],         cal:200,  prot:6,   label:'Chia pudding' },
+    { tags:['chia seeds','chia seed'],                          cal:140,  prot:5,   label:'Chia seeds' },
+    { tags:['overnight oats'],                                  cal:350,  prot:12,  label:'Overnight oats' },
+    { tags:['protein oats','high protein oatmeal'],             cal:380,  prot:20,  label:'Protein oats' },
+    // Proteins
+    { tags:['chicken breast','grilled chicken','baked chicken','chicken'],       cal:280,  prot:42,  label:'Chicken breast' },
+    { tags:['chicken thigh','chicken thighs'],                   cal:300,  prot:28,  label:'Chicken thighs' },
+    { tags:['salmon','grilled salmon','baked salmon'],           cal:360,  prot:40,  label:'Salmon' },
+    { tags:['tuna','canned tuna','tuna can'],                    cal:130,  prot:28,  label:'Tuna' },
+    { tags:['shrimp','prawns','grilled shrimp'],                 cal:160,  prot:30,  label:'Shrimp' },
+    { tags:['steak','beef steak','sirloin','ribeye','filet'],    cal:420,  prot:46,  label:'Steak' },
+    { tags:['ground beef','beef','minced beef'],                 cal:340,  prot:28,  label:'Ground beef' },
+    { tags:['turkey','ground turkey','turkey breast'],           cal:260,  prot:40,  label:'Turkey' },
+    { tags:['pork chop','pork','pork loin'],                     cal:310,  prot:36,  label:'Pork' },
+    { tags:['tofu','firm tofu','silken tofu'],                   cal:180,  prot:20,  label:'Tofu' },
+    { tags:['tempeh'],                                           cal:220,  prot:24,  label:'Tempeh' },
+    { tags:['cod','white fish','tilapia','halibut'],             cal:200,  prot:38,  label:'White fish' },
+    { tags:['bacon'],                                            cal:220,  prot:15,  label:'Bacon' },
+    { tags:['sausage','sausages'],                               cal:290,  prot:16,  label:'Sausage' },
+    // Carbs & sides
+    { tags:['white rice','rice'],                                cal:210,  prot:4,   label:'White rice' },
+    { tags:['brown rice'],                                       cal:220,  prot:5,   label:'Brown rice' },
+    { tags:['pasta','spaghetti','penne','fettuccine'],           cal:340,  prot:12,  label:'Pasta' },
+    { tags:['quinoa'],                                           cal:220,  prot:8,   label:'Quinoa' },
+    { tags:['sweet potato','sweet potatoes'],                    cal:180,  prot:4,   label:'Sweet potato' },
+    { tags:['baked potato','potato','potatoes'],                 cal:170,  prot:4,   label:'Potato' },
+    { tags:['bread','sandwich bread','sourdough'],               cal:160,  prot:6,   label:'Bread' },
+    { tags:['noodles','rice noodles','udon'],                    cal:300,  prot:8,   label:'Noodles' },
+    // Meals
+    { tags:['caesar salad','caesar'],                            cal:360,  prot:12,  label:'Caesar salad' },
+    { tags:['salad','green salad','side salad'],                 cal:120,  prot:4,   label:'Salad' },
+    { tags:['burger','hamburger','cheeseburger'],                cal:550,  prot:30,  label:'Burger' },
+    { tags:['pizza','pizza slice'],                              cal:500,  prot:20,  label:'Pizza' },
+    { tags:['sandwich','sub'],                                   cal:420,  prot:22,  label:'Sandwich' },
+    { tags:['turkey sandwich'],                                  cal:390,  prot:30,  label:'Turkey sandwich' },
+    { tags:['wrap','chicken wrap'],                              cal:460,  prot:28,  label:'Wrap' },
+    { tags:['burrito','chicken burrito','beef burrito'],         cal:720,  prot:32,  label:'Burrito' },
+    { tags:['tacos','taco','fish tacos'],                        cal:420,  prot:24,  label:'Tacos' },
+    { tags:['sushi','sushi roll','rolls'],                       cal:370,  prot:20,  label:'Sushi' },
+    { tags:['stir fry','stir-fry','fried rice'],                 cal:420,  prot:26,  label:'Stir fry' },
+    { tags:['soup','chicken soup','vegetable soup'],             cal:200,  prot:12,  label:'Soup' },
+    { tags:['ramen','noodle soup'],                              cal:520,  prot:20,  label:'Ramen' },
+    { tags:['bowl','grain bowl','rice bowl','protein bowl'],     cal:480,  prot:30,  label:'Bowl' },
+    { tags:['curry','chicken curry','thai curry'],               cal:480,  prot:28,  label:'Curry' },
+    { tags:['pad thai'],                                         cal:500,  prot:22,  label:'Pad Thai' },
+    { tags:['poke bowl','poke'],                                 cal:480,  prot:30,  label:'Poké bowl' },
+    { tags:['quesadilla'],                                       cal:500,  prot:24,  label:'Quesadilla' },
+    { tags:['omelette','omelet'],                                cal:300,  prot:22,  label:'Omelette' },
+    { tags:['frittata'],                                         cal:280,  prot:20,  label:'Frittata' },
+    // Snacks & small
+    { tags:['almonds','almond','mixed nuts','nuts'],             cal:170,  prot:6,   label:'Almonds' },
+    { tags:['peanut butter','almond butter','nut butter'],       cal:190,  prot:8,   label:'Nut butter' },
+    { tags:['protein bar','quest bar','clif bar'],               cal:210,  prot:20,  label:'Protein bar' },
+    { tags:['cottage cheese'],                                   cal:210,  prot:26,  label:'Cottage cheese' },
+    { tags:['string cheese','cheese stick'],                     cal:80,   prot:7,   label:'String cheese' },
+    { tags:['banana'],                                           cal:105,  prot:1,   label:'Banana' },
+    { tags:['apple'],                                            cal:95,   prot:0,   label:'Apple' },
+    { tags:['orange','mandarin'],                                cal:80,   prot:1,   label:'Orange' },
+    { tags:['mango'],                                            cal:100,  prot:1,   label:'Mango' },
+    { tags:['grapes','grape'],                                   cal:90,   prot:1,   label:'Grapes' },
+    { tags:['watermelon'],                                       cal:80,   prot:1,   label:'Watermelon' },
+    { tags:['pineapple'],                                        cal:80,   prot:1,   label:'Pineapple' },
+    { tags:['berries','blueberries','strawberries','raspberries','blackberries'], cal:70, prot:1, label:'Berries' },
+    { tags:['fruits','fruit','mixed fruit','fresh fruit','mixed fruits','assorted fruit'], cal:90, prot:1, label:'Mixed fruit' },
+    { tags:['hummus','hummus and veggies'],                      cal:180,  prot:6,   label:'Hummus' },
+    { tags:['edamame'],                                          cal:190,  prot:17,  label:'Edamame' },
+    { tags:['rice cake','rice cakes'],                           cal:70,   prot:1,   label:'Rice cakes' },
+    // Drinks & dairy
+    { tags:['latte','coffee latte','oat latte'],                 cal:190,  prot:8,   label:'Latte' },
+    { tags:['milk','glass of milk'],                             cal:150,  prot:8,   label:'Milk' },
+    { tags:['bone broth'],                                       cal:45,   prot:10,  label:'Bone broth' },
+  ];
+
+  function estimateLocal(input) {
+    if (!input || input.trim().length < 2) return null;
+    const q = input.toLowerCase().trim();
+    let best = null, bestScore = 0;
+    for (const food of FOOD_DB) {
+      let score = 0;
+      for (const tag of food.tags) {
+        if (q === tag)                           { score = Math.max(score, 100); break; }
+        if (q.includes(tag) || tag.includes(q)) { score = Math.max(score, 80);  continue; }
+        const qWords = q.split(/\s+/), tagWords = tag.split(/\s+/);
+        const overlap = qWords.filter(w => tagWords.includes(w) && w.length > 2).length;
+        if (overlap > 0) score = Math.max(score, overlap * 25);
+      }
+      if (score > bestScore) { bestScore = score; best = food; }
+    }
+    return bestScore >= 25 ? best : null;
+  }
+
+  // ── Portion parsing ────────────────────────────────────────────────
+  const WORD_NUMS = { half:0.5, quarter:0.25, a:1, an:1, one:1, two:2, three:3, four:4, five:5, six:6, seven:7, eight:8, nine:9, ten:10 };
+
+  // Unit → grams conversion (approximate per unit)
+  const UNIT_G = {
+    g:1, gram:1, grams:1,
+    kg:1000, kilogram:1000, kilograms:1000,
+    oz:28.35, ounce:28.35, ounces:28.35,
+    lb:453.6, lbs:453.6, pound:453.6, pounds:453.6,
+    cup:200, cups:200,
+    tbsp:15, tablespoon:15, tablespoons:15,
+    tsp:5,  teaspoon:5,   teaspoons:5,
+    slice:35, slices:35,
+    piece:120, pieces:120,
+    serving:150, servings:150,
+    scoop:35, scoops:35,
+    handful:30, handfuls:30,
+  };
+
+  function parseQty(str) {
+    const s = str.toLowerCase();
+    if (WORD_NUMS[s] !== undefined) return WORD_NUMS[s];
+    if (s.includes('/')) { const [n,d] = s.split('/').map(Number); return n/d; }
+    return parseFloat(s) || 1;
+  }
+
+  // Informal size descriptors → gram multiplier (vs 100g USDA base)
+  const SIZE_MULT = [
+    [/^palm.?sized?\s+/i,  1.0],
+    [/^fist.?sized?\s+/i,  1.3],
+    [/^small\s+/i,         0.75],
+    [/^medium\s+/i,        1.0],
+    [/^large\s+/i,         1.5],
+    [/^big\s+/i,           1.5],
+    [/^generous\s+/i,      1.6],
+    [/^heaping\s+/i,       1.3],
+    [/^handful\s+of\s+/i,  0.3],
+  ];
+
+  // Per-item gram weights for common countable foods.
+  // Used when user says "10 grapes" or "3 eggs" — converts count to grams accurately.
+  const ITEM_GRAMS = {
+    // Small fruit
+    'grape':5,'grapes':5,'green grape':5,'green grapes':5,'red grape':5,'red grapes':5,
+    'blueberry':1.5,'blueberries':1.5,
+    'strawberry':15,'strawberries':15,
+    'cherry':8,'cherries':8,
+    'raspberry':2,'raspberries':2,
+    'blackberry':4,'blackberries':4,
+    'olive':4,'olives':4,
+    // Nuts
+    'almond':1.2,'almonds':1.2,
+    'cashew':1.5,'cashews':1.5,
+    'walnut':4,'walnuts':4,
+    'pecan':3.5,'pecans':3.5,
+    'pistachio':1.5,'pistachios':1.5,
+    // Eggs & proteins
+    'egg':50,'eggs':50,'large egg':50,'large eggs':50,'whole egg':50,'whole eggs':50,
+    'chicken breast':170,'chicken breasts':170,
+    'chicken thigh':120,'chicken thighs':120,
+    // Other
+    'cookie':30,'cookies':30,
+    'cracker':8,'crackers':8,
+    'date':24,'dates':24,
+    'fig':40,'figs':40,
+    'rice cake':9,'rice cakes':9,
+  };
+
+  // Extract { food, mult, fixedCal } from a raw segment.
+  // fixedCal = user explicitly stated calories; mult = ×100g multiplier; both null = use default.
+  function extractPortion(raw) {
+    const t = raw.trim().toLowerCase();
+    let m;
+
+    // ── Priority 0: explicit calorie amount ─────────────────────────
+    // "200 kcal sweet potato"  |  "sweet potato 200 kcal"
+    m = t.match(/^(\d+(?:\.\d+)?)\s*(kcal|cal|calorie|calories)\s+(?:of\s+)?(.+)$/i);
+    if (m) return { food: m[3].trim(), mult: null, fixedCal: parseFloat(m[1]) };
+
+    m = t.match(/^(.+?)\s+(\d+(?:\.\d+)?)\s*(kcal|cal|calorie|calories)$/i);
+    if (m) return { food: m[1].trim(), mult: null, fixedCal: parseFloat(m[2]) };
+
+    // ── Priority 1: size descriptor ─────────────────────────────────
+    for (const [pat, sizeMult] of SIZE_MULT) {
+      if (pat.test(t)) {
+        return { food: t.replace(pat, '').trim(), mult: sizeMult, fixedCal: null };
+      }
+    }
+
+    const unitList = Object.keys(UNIT_G).join('|');
+
+    // ── Priority 2: number + unit + food  ("200g chicken", "2 cups oats") ──
+    const patA = new RegExp(
+      `^([\\d./]+|${Object.keys(WORD_NUMS).join('|')})\\s+(${unitList})s?\\s+(?:of\\s+)?(.+)$`, 'i'
+    );
+    m = t.match(patA);
+    if (m) {
+      const qty   = parseQty(m[1]);
+      const unit  = m[2].toLowerCase().replace(/s$/, '');
+      const grams = qty * (UNIT_G[unit] || UNIT_G[unit + 's'] || 100);
+      return { food: m[3].trim(), mult: grams / 100, fixedCal: null };
+    }
+
+    // ── Priority 3: count + food ("10 grapes", "3 eggs", "2 chicken breasts") ──
+    const patB = /^(\d+(?:\.\d+)?|half|quarter|one|two|three|four|five|six|seven|eight|nine|ten)\s+(.+)$/i;
+    m = t.match(patB);
+    if (m) {
+      const qty  = parseQty(m[1]);
+      const food = m[2].trim();
+      if (qty >= 1 && qty <= 20) {
+        // Use exact per-item weight if we know it
+        const gramsEach = ITEM_GRAMS[food] ?? null;
+        const mult = gramsEach !== null
+          ? (qty * gramsEach) / 100          // accurate: 10 grapes × 5g = 50g → mult 0.5
+          : null;                            // unknown item: fall back to 1 standard serving
+        return { food, mult, fixedCal: null };
+      }
+    }
+
+    // ── No portion info ─────────────────────────────────────────────
+    return { food: t, mult: null, fixedCal: null };
+  }
+
+  // Split free-text into raw segments, preserving portion info
+  function splitIngredients(text) {
+    return text
+      .split(/[,+&]|\band\b|\bwith\b|\bover\b|\bon\b|\bplus\b/gi)
+      .map(s => s.trim())
+      .filter(s => s.length > 1);
+  }
+
+  // Fetch one segment from USDA (portion-aware), fall back to local DB
+  async function lookupOne(rawSegment) {
+    const { food, mult: portionMult, fixedCal } = extractPortion(rawSegment);
+    if (!food || food.length < 2) return null;
+
+    // Try local DB first for well-known foods — faster and more reliable for common items
+    const local = estimateLocal(food);
+
+    // Helper to parse USDA response into { cal, prot } or null
+    async function fetchUSDA(query) {
+      try {
+        const res  = await fetch(
+          `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&api_key=DEMO_KEY&pageSize=1`
+        );
+        const data = await res.json();
+        if (!data.foods || !data.foods.length) return null;
+        const f     = data.foods[0];
+        const nuts  = f.foodNutrients || [];
+        const kcalN = nuts.find(n => n.nutrientId === 1008 || (n.nutrientName||'').toLowerCase().includes('energy'));
+        const protN = nuts.find(n => n.nutrientId === 1003 || (n.nutrientName||'').toLowerCase() === 'protein');
+        if (!kcalN && !protN) return null;
+
+        if (fixedCal != null && kcalN && kcalN.value > 0) {
+          // User stated exact calories — derive protein by the food's cal:prot ratio from USDA
+          const ratio = protN ? protN.value / kcalN.value : 0;
+          return { cal: Math.round(fixedCal), prot: Math.round(fixedCal * ratio) };
+        }
+
+        const mult = portionMult != null ? portionMult
+          : (f.servingSize > 10 && f.servingSize < 500) ? f.servingSize / 100
+          : 1.5;
+        return {
+          cal:  kcalN ? Math.round(kcalN.value * mult) : 0,
+          prot: protN ? Math.round(protN.value * mult) : 0,
+        };
+      } catch { return null; }
+    }
+
+    // Try USDA with full food string, then with first two words as fallback
+    let usda = await fetchUSDA(food);
+    if (!usda) {
+      const simplified = food.split(/\s+/).slice(0, 2).join(' ');
+      if (simplified !== food) usda = await fetchUSDA(simplified);
+    }
+
+    if (usda) {
+      return { label: rawSegment.trim(), cal: usda.cal, prot: usda.prot };
+    }
+
+    // Local fallback — local values are pre-portioned at ~1.5× 100g
+    if (local) {
+      if (fixedCal != null && local.cal > 0) {
+        const ratio = local.prot / local.cal;
+        return { label: rawSegment.trim(), cal: Math.round(fixedCal), prot: Math.round(fixedCal * ratio) };
+      }
+      const scale = portionMult != null ? portionMult / 1.5 : 1;
+      return {
+        label: rawSegment.trim(),
+        cal:   Math.round(local.cal  * scale),
+        prot:  Math.round(local.prot * scale),
+      };
+    }
+    return null;
+  }
+
+  let estimateTimer = null;
+  let lastEstimate  = { cal: null, prot: null };
+
+  async function tryEstimate() {
+    const name  = document.getElementById('meal-name').value.trim();
+    const hint  = document.getElementById('estimate-hint');
+    const calEl = document.getElementById('meal-cal');
+    const protEl= document.getElementById('meal-prot');
+
+    if (!name || name.length < 2) {
+      hint.textContent = '';
+      lastEstimate = { cal: null, prot: null };
+      return;
+    }
+
+    // Only overwrite if empty or previously auto-filled
+    const curCal  = calEl.value  ? parseInt(calEl.value)  : null;
+    const curProt = protEl.value ? parseInt(protEl.value) : null;
+    const calOk   = curCal  === null || curCal  === lastEstimate.cal;
+    const protOk  = curProt === null || curProt === lastEstimate.prot;
+    if (!calOk && !protOk) { hint.textContent = ''; return; }
+
+    hint.textContent = 'Estimating…';
+
+    const parts   = splitIngredients(name);
+    const results = await Promise.all(parts.map(lookupOne));
+    const found   = results.filter(Boolean);
+
+    if (!found.length) {
+      hint.textContent = 'No estimate found — enter manually';
+      lastEstimate = { cal: null, prot: null };
+      return;
+    }
+
+    const totalCal  = found.reduce((s, f) => s + f.cal,  0);
+    const totalProt = found.reduce((s, f) => s + f.prot, 0);
+
+    if (calOk)  { calEl.value  = totalCal;  lastEstimate.cal  = totalCal; }
+    if (protOk) { protEl.value = totalProt; lastEstimate.prot = totalProt; }
+
+    // Show per-item breakdown
+    const breakdown = found.map(f => `${f.label} (${f.cal} kcal · ${f.prot}g)`).join(' + ');
+    hint.innerHTML = `<span style="color:var(--ink-light)">Breakdown: </span>${breakdown}`;
+  }
+
+  function scheduleEstimate() {
+    clearTimeout(estimateTimer);
+    estimateTimer = setTimeout(tryEstimate, 600);
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────
+  function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  // ── Init ───────────────────────────────────────────────────────────
+  const now = new Date();
+  calYear  = now.getFullYear();
+  calMonth = now.getMonth();
+
+  document.getElementById('today-date').textContent = now.toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric'
+  });
+
+  render();
+</script>
+</body>
+</html>
