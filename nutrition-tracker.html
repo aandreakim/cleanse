@@ -370,16 +370,19 @@
 
     /* ── Auth bar ────────────────────────── */
     .auth-bar {
-      padding: 10px 28px;
       background: #b8cdb4;
       border-bottom: 1px solid #a8bda4;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      min-height: 38px;
     }
 
-    .auth-btn {
+    /* signed-out panel */
+    .auth-panel {
+      padding: 18px 28px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .auth-google-btn {
       font-family: 'Jost', sans-serif;
       font-size: 0.65rem;
       letter-spacing: 0.12em;
@@ -388,13 +391,80 @@
       background: var(--ink);
       color: #f8f5f0;
       border: none;
-      padding: 7px 14px;
+      padding: 9px 14px;
       border-radius: 4px;
       cursor: pointer;
       transition: background 0.15s;
+      width: 100%;
+    }
+    .auth-google-btn:hover { background: #4a3d35; }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      color: #5a7a5e;
+      text-transform: uppercase;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #a8bda4;
     }
 
-    .auth-btn:hover { background: #4a3d35; }
+    .auth-email-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .auth-email-fields input {
+      font-family: 'Jost', sans-serif;
+      font-size: 0.78rem;
+      padding: 8px 10px;
+      border: 1px solid #a8bda4;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.5);
+      color: var(--ink);
+      outline: none;
+      width: 100%;
+    }
+    .auth-email-fields input::placeholder { color: #7a9a7e; }
+    .auth-email-fields input:focus { border-color: #6b8a6e; background: rgba(255,255,255,0.75); }
+
+    .auth-email-btns {
+      display: flex;
+      gap: 8px;
+    }
+    .auth-email-btn {
+      font-family: 'Jost', sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 500;
+      flex: 1;
+      padding: 8px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .auth-email-btn.primary { background: #4a6e4e; color: #f8f5f0; }
+    .auth-email-btn.primary:hover { background: #3a5e3e; }
+    .auth-email-btn.secondary { background: rgba(255,255,255,0.45); color: #3a5a3e; border: 1px solid #a8bda4; }
+    .auth-email-btn.secondary:hover { background: rgba(255,255,255,0.7); }
+
+    .auth-error {
+      font-size: 0.68rem;
+      color: #8b3a3a;
+      text-align: center;
+      min-height: 14px;
+    }
+
+    /* signed-in strip */
+    .auth-btn { display: none; } /* legacy — kept for safety */
 
     .auth-signed-in {
       display: flex;
@@ -402,6 +472,7 @@
       gap: 12px;
       width: 100%;
       justify-content: space-between;
+      padding: 10px 28px;
     }
 
     .auth-user-info {
@@ -657,7 +728,19 @@
 <!-- Auth bar -->
 <div class="auth-bar">
   <div id="auth-signed-out">
-    <button class="auth-btn" onclick="signIn()">Sign in with Google to sync</button>
+    <div class="auth-panel">
+      <button class="auth-google-btn" onclick="signIn()">Continue with Google</button>
+      <div class="auth-divider">or</div>
+      <div class="auth-email-fields">
+        <input type="email" id="auth-email" placeholder="Email address" />
+        <input type="password" id="auth-password" placeholder="Password" />
+      </div>
+      <div class="auth-email-btns">
+        <button class="auth-email-btn primary" onclick="signInEmail()">Sign in</button>
+        <button class="auth-email-btn secondary" onclick="signUpEmail()">Create account</button>
+      </div>
+      <div class="auth-error" id="auth-error"></div>
+    </div>
   </div>
   <div id="auth-signed-in" style="display:none" class="auth-signed-in">
     <div class="auth-user-info">
@@ -804,7 +887,8 @@
   import { initializeApp }                              from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
            getRedirectResult, onAuthStateChanged, signOut as fbSignOut,
-           browserLocalPersistence, setPersistence }
+           browserLocalPersistence, setPersistence,
+           createUserWithEmailAndPassword, signInWithEmailAndPassword }
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
   import { getFirestore, doc, setDoc, onSnapshot }      from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
@@ -827,6 +911,52 @@
 
   // Ensure auth state persists across page loads on all browsers
   setPersistence(auth, browserLocalPersistence).catch(() => {});
+
+  function authError(msg) {
+    const el = document.getElementById('auth-error');
+    if (el) el.textContent = msg;
+  }
+
+  function getEmailPassword() {
+    const email = document.getElementById('auth-email').value.trim();
+    const pass  = document.getElementById('auth-password').value;
+    return { email, pass };
+  }
+
+  async function signInEmail() {
+    const { email, pass } = getEmailPassword();
+    if (!email || !pass) return authError('Please enter your email and password.');
+    authError('');
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (e) {
+      if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+        authError('Incorrect email or password.');
+      } else if (e.code === 'auth/invalid-email') {
+        authError('Please enter a valid email address.');
+      } else {
+        authError('Sign-in failed. Please try again.');
+      }
+    }
+  }
+
+  async function signUpEmail() {
+    const { email, pass } = getEmailPassword();
+    if (!email || !pass) return authError('Please enter an email and password.');
+    if (pass.length < 6)  return authError('Password must be at least 6 characters.');
+    authError('');
+    try {
+      await createUserWithEmailAndPassword(auth, email, pass);
+    } catch (e) {
+      if (e.code === 'auth/email-already-in-use') {
+        authError('An account with this email already exists. Try signing in.');
+      } else if (e.code === 'auth/invalid-email') {
+        authError('Please enter a valid email address.');
+      } else {
+        authError('Could not create account. Please try again.');
+      }
+    }
+  }
 
   // Complete any in-progress redirect sign-in when page loads
   getRedirectResult(auth).then(result => {
@@ -918,8 +1048,10 @@
   });
 
   // Expose auth functions to HTML onclick handlers
-  window.signIn    = signIn;
-  window.doSignOut = doSignOut;
+  window.signIn       = signIn;
+  window.signInEmail  = signInEmail;
+  window.signUpEmail  = signUpEmail;
+  window.doSignOut    = doSignOut;
 
   // ── Storage (permanent key — never change) ──────────────────────────
   const STORAGE_KEY = 'cleanse_nutrition';
