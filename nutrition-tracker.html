@@ -28,6 +28,12 @@
       background: var(--bg);
       color: var(--ink);
       min-height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* App page stays narrow / mobile-style */
+    #page-app {
       max-width: 440px;
       margin: 0 auto;
       padding: 0 0 60px;
@@ -722,14 +728,6 @@
       background: var(--bg);
     }
 
-    .login-hero {
-      background: #c8d9c4;
-      padding: 72px 40px 56px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
     .login-eyebrow {
       font-size: 0.62rem;
       letter-spacing: 0.22em;
@@ -746,10 +744,7 @@
       line-height: 1.1;
     }
 
-    .login-title em {
-      font-style: italic;
-      font-weight: 300;
-    }
+    .login-title em { font-style: italic; font-weight: 300; }
 
     .login-subtitle {
       margin-top: 8px;
@@ -757,17 +752,6 @@
       color: #5a7a5e;
       letter-spacing: 0.04em;
       font-weight: 300;
-    }
-
-    .login-card {
-      flex: 1;
-      padding: 44px 32px 48px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      max-width: 440px;
-      width: 100%;
-      margin: 0 auto;
     }
 
     .login-section-label {
@@ -778,13 +762,9 @@
       margin-bottom: 2px;
     }
 
-    #page-login .auth-google-btn {
-      width: 100%;
-    }
+    #page-login .auth-google-btn { width: 100%; }
 
-    #page-login .auth-email-fields {
-      gap: 10px;
-    }
+    #page-login .auth-email-fields { gap: 10px; }
 
     #page-login .auth-email-fields input {
       background: var(--surface);
@@ -799,14 +779,61 @@
       background: #fff;
     }
 
-    #page-login .auth-email-btns {
-      gap: 10px;
-    }
+    #page-login .auth-email-btns { gap: 10px; }
 
     #page-login .auth-email-btn {
       padding: 11px;
       font-size: 0.65rem;
       border-radius: 6px;
+    }
+
+    /* Mobile: stacked layout */
+    .login-hero {
+      background: #c8d9c4;
+      padding: 72px 40px 56px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .login-card {
+      flex: 1;
+      padding: 44px 32px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-width: 440px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* Desktop: side-by-side layout */
+    @media (min-width: 768px) {
+      #page-login {
+        flex-direction: row;
+      }
+
+      .login-hero {
+        flex: 1;
+        min-height: 100vh;
+        padding: 80px 60px;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .login-title {
+        font-size: 4rem;
+      }
+
+      .login-card {
+        width: 420px;
+        flex: none;
+        padding: 80px 52px;
+        justify-content: center;
+        gap: 16px;
+        border-left: 1px solid var(--border);
+        background: var(--surface);
+      }
     }
 
     /* ── App page ────────────────────────── */
