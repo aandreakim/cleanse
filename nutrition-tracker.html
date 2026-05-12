@@ -714,9 +714,143 @@
       border-radius: 50%;
       flex-shrink: 0;
     }
+    /* ── Login page ──────────────────────── */
+    #page-login {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+    }
+
+    .login-hero {
+      background: #c8d9c4;
+      padding: 72px 40px 56px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .login-eyebrow {
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #6b8a6e;
+      font-weight: 400;
+    }
+
+    .login-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3rem;
+      font-weight: 300;
+      color: #2c3a2e;
+      line-height: 1.1;
+    }
+
+    .login-title em {
+      font-style: italic;
+      font-weight: 300;
+    }
+
+    .login-subtitle {
+      margin-top: 8px;
+      font-size: 0.72rem;
+      color: #5a7a5e;
+      letter-spacing: 0.04em;
+      font-weight: 300;
+    }
+
+    .login-card {
+      flex: 1;
+      padding: 44px 32px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-width: 440px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .login-section-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      margin-bottom: 2px;
+    }
+
+    #page-login .auth-google-btn {
+      width: 100%;
+    }
+
+    #page-login .auth-email-fields {
+      gap: 10px;
+    }
+
+    #page-login .auth-email-fields input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 11px 14px;
+      font-size: 0.84rem;
+      border-radius: 6px;
+    }
+
+    #page-login .auth-email-fields input:focus {
+      border-color: var(--sage);
+      background: #fff;
+    }
+
+    #page-login .auth-email-btns {
+      gap: 10px;
+    }
+
+    #page-login .auth-email-btn {
+      padding: 11px;
+      font-size: 0.65rem;
+      border-radius: 6px;
+    }
+
+    /* ── App page ────────────────────────── */
+    #page-app { display: none; }
+
   </style>
 </head>
 <body>
+
+<!-- ════════════════════════════════════════ -->
+<!-- LOGIN PAGE                              -->
+<!-- ════════════════════════════════════════ -->
+<div id="page-login">
+  <div class="login-hero">
+    <div class="login-eyebrow">Wellness Journal</div>
+    <div class="login-title">Daily <em>Nutrition</em></div>
+    <div class="login-subtitle">Track your nourishment, beautifully.</div>
+  </div>
+
+  <div class="login-card">
+    <div class="login-section-label">Sign in to continue</div>
+
+    <button class="auth-google-btn" onclick="signIn()">Continue with Google</button>
+
+    <div class="auth-divider">or</div>
+
+    <div class="auth-email-fields">
+      <input type="email" id="auth-email" placeholder="Email address" />
+      <input type="password" id="auth-password" placeholder="Password" />
+    </div>
+
+    <div class="auth-email-btns">
+      <button class="auth-email-btn primary" onclick="signInEmail()">Sign in</button>
+      <button class="auth-email-btn secondary" onclick="signUpEmail()">Create account</button>
+    </div>
+
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!-- APP PAGE                                -->
+<!-- ════════════════════════════════════════ -->
+<div id="page-app">
 
 <!-- Header -->
 <div class="header">
@@ -725,24 +859,9 @@
   <div class="header-date" id="today-date"></div>
 </div>
 
-<!-- Auth bar -->
+<!-- Top bar: user info + sign out -->
 <div class="auth-bar">
-  <div id="auth-signed-out">
-    <div class="auth-panel">
-      <button class="auth-google-btn" onclick="signIn()">Continue with Google</button>
-      <div class="auth-divider">or</div>
-      <div class="auth-email-fields">
-        <input type="email" id="auth-email" placeholder="Email address" />
-        <input type="password" id="auth-password" placeholder="Password" />
-      </div>
-      <div class="auth-email-btns">
-        <button class="auth-email-btn primary" onclick="signInEmail()">Sign in</button>
-        <button class="auth-email-btn secondary" onclick="signUpEmail()">Create account</button>
-      </div>
-      <div class="auth-error" id="auth-error"></div>
-    </div>
-  </div>
-  <div id="auth-signed-in" style="display:none" class="auth-signed-in">
+  <div class="auth-signed-in" id="auth-signed-in">
     <div class="auth-user-info">
       <img id="auth-avatar" class="auth-avatar" src="" alt="" />
       <span class="auth-name" id="auth-user-name"></span>
@@ -882,6 +1001,8 @@
 
 </div><!-- /panel-history -->
 
+</div><!-- /page-app -->
+
 <script type="module">
   // ── Firebase ────────────────────────────────────────────────────────
   import { initializeApp }                              from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -1014,8 +1135,9 @@
   }
 
   function updateAuthUI(user) {
-    document.getElementById('auth-signed-out').style.display = user ? 'none'  : 'block';
-    document.getElementById('auth-signed-in').style.display  = user ? 'flex'  : 'none';
+    // Switch between login page and app page
+    document.getElementById('page-login').style.display = user ? 'none'  : 'flex';
+    document.getElementById('page-app').style.display   = user ? 'block' : 'none';
     if (user) {
       document.getElementById('auth-user-name').textContent = user.displayName || user.email;
       const av = document.getElementById('auth-avatar');
